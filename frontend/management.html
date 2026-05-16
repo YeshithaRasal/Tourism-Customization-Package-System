@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator Hub | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            background-color: var(--background);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 3rem;
+        }
+
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            background: #f1f5f9;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .data-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-confirmed { background: #dcfce7; color: #166534; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+        .action-btn {
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .btn-approve { color: var(--success); }
+        .btn-delete { color: var(--danger); }
+        .btn-edit { color: var(--primary); }
+
+        .hidden { display: none !important; }
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 2rem; border-radius: 1rem;
+            max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div id="booking-modal" class="modal hidden">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 id="modal-title">Booking Details</h2>
+            <button onclick="closeModal()" class="action-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="modal-body"></div>
+    </div>
+</div>
+
+<nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+        <a href="index.html" class="logo">LankaTravels</a>
+        <ul class="nav-links" id="auth-link" style="list-style: none; display: flex; gap: 2rem;">
+            <!-- Dynamic Links -->
+        </ul>
+    </div>
+</nav>
+
+<div class="admin-container">
+    <div class="header-section">
+        <div>
+            <h1>Administrator Hub</h1>
+            <p style="color: var(--text-muted);">Manage all user bookings and system status.</p>
+        </div>
+        <div style="text-align: right;">
+            <a href="view-users.html" class="btn btn-outline" style="font-size: 0.875rem; margin-right: 0.5rem; border: 1px solid #e2e8f0; background: white; color: var(--text-main);">
+                <i class="fas fa-users"></i> Manage Users
+            </a>
+            <a href="payment-details.html" class="btn btn-primary" style="font-size: 0.875rem;">
+                <i class="fas fa-tags"></i> Manage Pricing
+            </a>
+            <div id="last-updated" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;"></div>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="stats-container">
+        <!-- Stats -->
+    </div>
+
+    <div class="content-card">
+        <div style="padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.25rem; font-weight: 700;">Recent Bookings</h2>
+        </div>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Total Cost</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="booking-table-body">
+            <!-- Data -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    let bookings = [];
+
+    async function init() {
+        if (!isAdmin()) {
+            window.location.href = 'home.html';
+            return;
+        }
+        await loadBookings();
+    }
+
+    async function loadBookings() {
+        try {
+            const res = await apiFetch('/bookings');
+            bookings = await res.json();
+            renderStats();
+            renderBookings();
+            document.getElementById('last-updated').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
+        } catch (err) {
+            console.error('Failed to load bookings', err);
+        }
+    }
+
+    function renderStats() {
+        const totalRevenue = bookings.reduce((sum, b) => b.status === 'confirmed' ? sum + b.totalCost : sum, 0);
+        const pendingBookings = bookings.filter(b => b.status === 'pending').length;
+
+        const stats = [
+            { label: 'Total Bookings', value: bookings.length, icon: 'fa-calendar-check', color: '#6366f1', bg: '#e0e7ff' },
+            { label: 'Pending Approval', value: pendingBookings, icon: 'fa-clock', color: '#f59e0b', bg: '#fef3c7' },
+            { label: 'Total Revenue', value: `Rs. ${totalRevenue.toLocaleString()}`, icon: 'fa-money-bill-wave', color: '#10b981', bg: '#dcfce7' }
+        ];
+
+        document.getElementById('stats-container').innerHTML = stats.map(s => `
+            <div class="stat-card">
+                <div class="stat-icon" style="background: ${s.bg}; color: ${s.color};">
+                    <i class="fas ${s.icon}"></i>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted);">${s.label}</div>
+                    <div style="font-size: 1.25rem; font-weight: 700;">${s.value}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderBookings() {
+        const tbody = document.getElementById('booking-table-body');
+        tbody.innerHTML = bookings.sort((a, b) => b.id - a.id).map(b => `
+            <tr>
+                <td>#${b.id}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--primary);">
+                            ${b.user.profilePicture ? `<img src="${b.user.profilePicture}" style="width: 100%; height: 100%; object-fit: cover;">` : (b.user.name ? b.user.name.charAt(0).toUpperCase() : '?')}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${b.user.name || 'User'}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${b.user.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="font-weight: 700;">Rs. ${b.totalCost.toLocaleString()}</td>
+                <td><span class="badge badge-${b.status}">${b.status.toUpperCase()}</span></td>
+                <td style="font-size: 0.875rem; color: var(--text-muted);">${new Date(b.createdAt).toLocaleDateString()}</td>
+                <td>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="action-btn btn-edit" onclick="viewBookingDetails(${b.id})" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ${b.status === 'pending' ? `
+                            <button class="action-btn btn-approve" onclick="approveBooking(${b.id})" title="Approve">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : ''}
+                        ${b.status !== 'cancelled' ? `
+                            <button class="action-btn" onclick="cancelBooking(${b.id})" title="Cancel Booking" style="color: var(--warning);">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        ` : ''}
+                        <button class="action-btn btn-delete" onclick="deleteBooking(${b.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function viewBookingDetails(id) {
+        const b = bookings.find(x => x.id === id);
+        if (!b) return;
+
+        let detailsHtml = `
+            <div style="margin-bottom: 1rem;">
+                <strong>Customer:</strong> ${b.user.name || 'User'} (${b.user.email})<br>
+                <strong>Date:</strong> ${new Date(b.createdAt).toLocaleString()}<br>
+                <strong>Status:</strong> <span class="badge badge-${b.status}">${b.status.toUpperCase()}</span>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 1rem 0;">
+        `;
+
+        if (b.details && b.details.length > 0) {
+            b.details.forEach((d, i) => {
+                detailsHtml += `
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.5rem;">
+                        <div style="font-weight: 700; color: var(--primary);">Destination ${i+1}: ${d.destination ? d.destination.name : 'Unknown'}</div>
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Hotel:</strong> ${d.hotel ? d.hotel.name : 'None'} (${d.numNights} nights)<br>
+                            <strong>Activities:</strong> ${d.activities ? d.activities.map(a => a.name).join(', ') : 'None'}<br>
+                            <div style="text-align: right; font-weight: 600; margin-top: 0.5rem;">Subtotal: Rs. ${d.subtotal.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        detailsHtml += `<div style="text-align: right; font-size: 1.25rem; font-weight: 800; margin-top: 1rem;">Total: Rs. ${b.totalCost.toLocaleString()}</div>`;
+
+        document.getElementById('modal-title').innerText = `Booking #${b.id}`;
+        document.getElementById('modal-body').innerHTML = detailsHtml;
+        document.getElementById('booking-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('booking-modal').classList.add('hidden');
+    }
+
+    async function approveBooking(id) {
+        if (!confirm('Are you sure you want to approve this booking?')) return;
+        try {
+            await apiFetch(`/bookings/${id}/status?status=confirmed`, { method: 'PUT' });
+            alert('Booking approved!');
+            loadBookings();
+        } catch (err) {
+            alert('Action failed');
+        }
+    }
+
+    async function cancelBooking(id) {
+        if (!confirm('Are you sure you want to cancel this booking?')) return;
+        try {
+            await apiFetch(`/bookings/${id}/status?status=cancelled`, { method: 'PUT' });
+            alert('Booking cancelled');
+            loadBookings();
+        } catch (err) {
+            alert('Action failed');
+        }
+    }
+
+    async function deleteBooking(id) {
+        if (!confirm('Are you sure you want to delete this booking?')) return;
+        try {
+            await apiFetch(`/bookings/${id}`, { method: 'DELETE' });
+            alert('Booking deleted!');
+            loadBookings();
+        } catch (err) {
+            alert('Delete failed');
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
