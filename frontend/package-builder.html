@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customize Your Package | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0d9488; /* Teal/Cyan */
+            --primary-light: #f0fdfa;
+            --accent: #2dd4bf;
+        }
+        .builder-container { max-width: 1200px; margin: 4rem auto; }
+        .step-indicator { background: var(--primary); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin-bottom: 1rem; }
+        .dest-card { border-radius: 1.5rem; border: 2px solid transparent; cursor: pointer; transition: all 0.3s; background: white; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .dest-card.selected { border-color: var(--primary); background: var(--primary-light); transform: scale(1.05); }
+        .sticky-summary { position: sticky; top: 6rem; background: white; padding: 2rem; border-radius: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body style="background: #fdfdfd;">
+    <nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+            <a href="index.html" class="logo">LankaTravels</a>
+            <ul class="nav-links" id="auth-link" style="list-style: none;">
+                <!-- Dynamic Role-Based Links -->
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container builder-container" id="user-builder-ui">
+        <header style="margin-bottom: 4rem;">
+            <h1 style="font-size: 3rem; font-family: 'Playfair Display'; margin-bottom: 1rem;">Craft Your Perfect Tour</h1>
+            <p style="color: #64748b; font-size: 1.25rem;">Select your destinations and customize every detail of your Sri Lankan journey.</p>
+        </header>
+
+        <div style="display: grid; grid-template-columns: 1fr 380px; gap: 3rem;">
+            <div id="planner-steps">
+                <!-- Destinations Step -->
+                <section style="margin-bottom: 5rem;">
+                    <div class="step-indicator">1</div>
+                    <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 2rem;">Select Your Destinations</h2>
+                    <div id="destinations-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+                        <!-- Dynamic -->
+                    </div>
+                </section>
+
+                <!-- Configuration Step -->
+                <section id="customizer-section" style="display: none;">
+                    <div class="step-indicator">2</div>
+                    <h2 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 2rem;">Customize Stay & Activities</h2>
+                    <div id="destinations-config">
+                        <!-- Dynamic per-destination settings -->
+                    </div>
+                </section>
+            </div>
+
+            <aside>
+                <div class="sticky-summary">
+                    <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f1f5f9;">Tour Summary</h3>
+                    <div id="price-breakdown" style="margin-bottom: 2rem;">
+                        <p style="color: #94a3b8; font-style: italic;">Select a destination to begin...</p>
+                    </div>
+                    
+                    <div style="background: var(--primary-light); padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="color: #64748b; font-weight: 600;">Estimated Total</span>
+                        </div>
+                        <div id="total-price" style="font-size: 2rem; font-weight: 800; color: var(--primary);">LKR 0</div>
+                    </div>
+
+                    <button id="book-btn" class="btn btn-primary" style="width: 100%; padding: 1.25rem; border-radius: 1rem; font-weight: 800; font-size: 1.125rem; box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3);" disabled>
+                        Confirm Booking
+                    </button>
+                    <p style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-top: 1rem;">Secure payment processed via LankaTravels</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <main class="container" id="admin-booking-ui" style="display: none; padding: 4rem 0;">
+        <header style="margin-bottom: 3rem;">
+            <h1 style="font-size: 2.5rem; font-weight: 800; color: #1e293b;">Global Booking Manager</h1>
+            <p style="color: #64748b;">Monitor and manage all customer bookings across the network.</p>
+        </header>
+        <div id="all-bookings-list">
+            <!-- Dynamic list for admins -->
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let allDestinations = [];
+        let selectedDestIds = [];
+        let config = {}; // { destId: { hotelId, numNights, activityIds: [] } }
+
+        async function init() {
+            if (isAdmin()) {
+                document.getElementById('user-builder-ui').style.display = 'none';
+                document.getElementById('admin-booking-ui').style.display = 'block';
+                loadAllBookings();
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/destinations');
+                if (!res.ok) throw new Error('Failed to fetch');
+                allDestinations = await res.json();
+                renderDestinations();
+                
+                // Check URL for pre-selected destination
+                const urlParams = new URLSearchParams(window.location.search);
+                const preDest = urlParams.get('dest');
+                if (preDest) toggleDestination(parseInt(preDest));
+            } catch (err) {
+                console.error(err);
+                alert('Connection error: Please ensure the backend server is running.');
+            }
+        }
+
+        async function loadAllBookings() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterUserId = urlParams.get('filterUser');
+
+            try {
+                const res = await apiFetch('/bookings');
+                let bookings = await res.json();
+                
+                if (filterUserId) {
+                    bookings = bookings.filter(b => b.user && b.user.id == filterUserId);
+                }
+
+                const list = document.getElementById('all-bookings-list');
+                list.innerHTML = bookings.map(b => `
+                    <div class="card" style="padding: 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.125rem;">#TRV-${b.id} • ${b.user ? b.user.name : 'Unknown User'}</div>
+                            <p style="font-size: 0.875rem; color: #64748b;">${b.user ? b.user.email : ''} • Status: <strong style="color: ${b.status === 'confirmed' ? 'green' : 'orange'}">${b.status}</strong></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; color: var(--primary);">LKR ${b.totalCost.toLocaleString()}</div>
+                            <a href="booking.html?id=${b.id}" class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; margin-top: 0.5rem;">View Details</a>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (bookings.length === 0) {
+                    list.innerHTML = '<p style="padding: 2rem; text-align: center; color: var(--muted);">No bookings found for this criteria.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderDestinations() {
+            const list = document.getElementById('destinations-list');
+            list.innerHTML = allDestinations.map(d => `
+                <div class="card dest-card ${selectedDestIds.includes(d.id) ? 'selected' : ''}" onclick="toggleDestination(${d.id})">
+                    <img src="${d.imageUrl}" style="height: 120px; width: 100%; object-fit: cover;">
+                    <div style="padding: 0.75rem; text-align: center;">
+                        <h4 style="font-size: 0.875rem;">${d.name}</h4>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function toggleDestination(id) {
+            if (selectedDestIds.includes(id)) {
+                selectedDestIds = selectedDestIds.filter(i => i !== id);
+                delete config[id];
+            } else {
+                selectedDestIds.push(id);
+                config[id] = { hotelId: null, numNights: 3, activityIds: [] };
+            }
+            renderDestinations();
+            updateUI();
+        }
+
+        async function updateUI() {
+            const section = document.getElementById('customizer-section');
+            const container = document.getElementById('destinations-config');
+            const bookBtn = document.getElementById('book-btn');
+            
+            if (selectedDestIds.length > 0) {
+                section.style.display = 'block';
+                bookBtn.disabled = false;
+                
+                let html = '';
+                for (const id of selectedDestIds) {
+                    const dest = allDestinations.find(d => d.id === id);
+                    html += await renderDestConfig(dest);
+                }
+                container.innerHTML = html;
+            } else {
+                section.style.display = 'none';
+                bookBtn.disabled = true;
+            }
+            calculatePrice();
+        }
+
+        async function renderDestConfig(dest) {
+            try {
+                const [hotels, activities, events] = await Promise.all([
+                    apiFetch(`/hotels/destination/${dest.id}`).then(r => r.json()),
+                    apiFetch(`/activities/destination/${dest.id}`).then(r => r.json()),
+                    apiFetch(`/events/${dest.id}`).then(r => r.json())
+                ]);
+
+                const currentConfig = config[dest.id];
+
+            return `
+                <div class="card" style="padding: 2rem; margin-bottom: 2rem; border: 1px solid #f1f5f9; position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 800; color: #1e293b;">${dest.name}</h3>
+                        <div id="events-${dest.id}">
+                            ${events.map(e => `<span style="background: #fef3c7; color: #92400e; padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; font-weight: 700;">Event: ${e.name}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <div class="form-group">
+                            <label class="form-label">Luxury Stay</label>
+                            <select class="form-input" onchange="updateConfig(${dest.id}, 'hotelId', this.value)" style="border-radius: 0.75rem;">
+                                <option value="">Select a Hotel</option>
+                                ${hotels.map(h => `<option value="${h.id}" ${currentConfig.hotelId == h.id ? 'selected' : ''}>${h.name} - LKR ${h.pricePerNight.toLocaleString()}/night</option>`).join('')}
+                            </select>
+                            <div id="hotel-preview-${dest.id}" style="margin-top: 1rem;">
+                                ${currentConfig.hotelId ? `<img src="${hotels.find(h => h.id == currentConfig.hotelId).imageUrl}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 0.75rem;" onerror="this.style.display='none'">` : ''}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Number of Nights</label>
+                            <input type="number" class="form-input" min="1" value="${currentConfig.numNights}" onchange="updateConfig(${dest.id}, 'numNights', this.value)" style="border-radius: 0.75rem;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="margin-bottom: 1rem; display: block;">Adventure Activities</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            ${activities.map(a => `
+                                <label style="display: flex; align-items: center; gap: 0.75rem; background: #fafafa; padding: 1rem; border-radius: 0.75rem; cursor: pointer; transition: background 0.2s;">
+                                    <input type="checkbox" onchange="updateActivities(${dest.id}, ${a.id}, this.checked)" ${currentConfig.activityIds.includes(a.id) ? 'checked' : ''} style="accent-color: var(--primary); width: 1.25rem; height: 1.25rem;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.875rem;">${a.name}</div>
+                                        <div style="color: var(--primary); font-size: 0.75rem; font-weight: 700;">LKR ${a.price.toLocaleString()}</div>
+                                    </div>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            } catch (err) {
+                console.error('Error rendering config for ' + dest.name, err);
+                return `<div class="card" style="padding: 1rem; color: red;">Error loading options for ${dest.name}. Please check if the backend is running.</div>`;
+            }
+        }
+
+        async function updateConfig(destId, key, value) {
+            config[destId][key] = key === 'numNights' ? parseInt(value) : value;
+            
+            if (key === 'hotelId' && value) {
+                const res = await apiFetch(`/hotels/id/${value}`);
+                const hotel = await res.json();
+                const preview = document.getElementById(`hotel-preview-${destId}`);
+                if (preview && hotel) {
+                    preview.innerHTML = `<img src="${hotel.imageUrl}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 0.75rem;" onerror="this.parentElement.innerHTML='<div style=\'font-size:0.75rem; color:red;\'>⚠️ Hotel image link invalid</div>'">`;
+                }
+            } else if (key === 'hotelId' && !value) {
+                const preview = document.getElementById(`hotel-preview-${destId}`);
+                if (preview) preview.innerHTML = '';
+            }
+
+            calculatePrice();
+        }
+
+        function updateActivities(destId, activityId, checked) {
+            if (checked) {
+                config[destId].activityIds.push(activityId);
+            } else {
+                config[destId].activityIds = config[destId].activityIds.filter(id => id !== activityId);
+            }
+            calculatePrice();
+        }
+
+        async function calculatePrice() {
+            let total = 0;
+            let breakdownHtml = '';
+
+            for (const destId of selectedDestIds) {
+                const dest = allDestinations.find(d => d.id === destId);
+                const c = config[destId];
+                
+                let destSubtotal = 0;
+                let hotelInfo = 'No hotel selected';
+                
+                if (c.hotelId) {
+                    const hRes = await apiFetch(`/hotels/id/${c.hotelId}`);
+                    const hotel = await hRes.json();
+                    if (hotel) {
+                        destSubtotal += hotel.pricePerNight * c.numNights;
+                        hotelInfo = `${hotel.name} (${c.numNights} nights)`;
+                    }
+                }
+
+                const aRes = await apiFetch(`/activities/destination/${destId}`);
+                const activities = await aRes.json();
+                c.activityIds.forEach(aid => {
+                    const act = activities.find(a => a.id == aid);
+                    if (act) destSubtotal += act.price;
+                });
+
+                total += destSubtotal;
+                breakdownHtml += `
+                    <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed #e2e8f0;">
+                        <div style="display: flex; justify-content: space-between; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">
+                            <span>${dest.name}</span>
+                            <span style="color: var(--primary);">LKR ${destSubtotal.toLocaleString()}</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">🏠 ${hotelInfo}</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">🎯 ${c.activityIds.length} Activities</div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('price-breakdown').innerHTML = breakdownHtml || '<p>No destinations selected yet.</p>';
+            document.getElementById('total-price').innerText = `LKR ${total.toLocaleString()}`;
+        }
+
+        document.getElementById('book-btn').onclick = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login to book');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Validation
+            for (const id of selectedDestIds) {
+                if (!config[id].hotelId) {
+                    alert(`Please select a hotel for ${allDestinations.find(d => d.id === id).name}`);
+                    return;
+                }
+            }
+
+            const payload = {
+                items: selectedDestIds.map(id => ({
+                    destinationId: id,
+                    hotelId: config[id].hotelId,
+                    numNights: config[id].numNights,
+                    activityIds: config[id].activityIds
+                }))
+            };
+
+            try {
+                const res = await apiFetch('/bookings', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    const booking = await res.json();
+                    window.location.href = `booking.html?id=${booking.id}`;
+                } else {
+                    alert('Failed to create booking');
+                }
+            } catch (err) {
+                alert('Error creating booking');
+            }
+        };
+
+        init();
+    </script>
+</body>
+</html>
