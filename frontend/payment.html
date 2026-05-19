@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Payment | LankaTravels</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body style="background: #f1f5f9;">
+<nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+  <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+    <a href="index.html" class="logo">LankaTravels</a>
+    <ul class="nav-links" id="auth-link" style="list-style: none;">
+      <!-- Dynamic Role-Based Links -->
+    </ul>
+  </div>
+</nav>
+
+<main class="container" style="margin-top: 5rem; max-width: 500px;">
+  <div class="card animate-fade-in" style="padding: 2.5rem; background: white; border: none; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="color: var(--primary);">🔒</span> Secure Payment
+    </h2>
+
+    <div style="background: #eff6ff; padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem;">
+      <p style="font-size: 0.875rem; color: var(--primary); font-weight: 600;">Total Amount Payable</p>
+      <p id="amount" style="font-size: 1.75rem; font-weight: 800; color: #1e293b;">LKR 0</p>
+    </div>
+
+    <form id="payment-form">
+      <div class="form-group">
+        <label class="form-label">Card Number</label>
+        <input type="text" class="form-input" placeholder="4242 4242 4242 4242" required maxlength="19">
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Expiry Date</label>
+          <input type="text" class="form-input" placeholder="MM/YY" required maxlength="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">CVV</label>
+          <input type="password" class="form-input" placeholder="•••" required maxlength="3">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.125rem; margin-top: 1rem; font-weight: 800;">Pay Now</button>
+    </form>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const bookingId = urlParams.get('id');
+
+  async function init() {
+      if (!bookingId) return;
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user) return;
+
+      try {
+          const res = await apiFetch(`/bookings/user/${user.id}`);
+          const bookings = await res.json();
+          const booking = bookings.find(b => b.id == bookingId);
+          if (booking) {
+              document.getElementById('amount').innerText = `LKR ${booking.totalCost.toLocaleString()}`;
+          }
+      } catch (e) {
+          console.error(e);
+      }
+  }
+
+  document.getElementById('payment-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.innerText = 'Processing...';
+      btn.disabled = true;
+
+      try {
+          // Simulate payment by updating booking status
+          const res = await apiFetch(`/bookings/${bookingId}/status?status=confirmed`, {
+              method: 'PUT'
+          });
+
+          if (res.ok) {
+              alert('Payment Successful! Your booking is confirmed.');
+              window.location.href = `reviews.html?bookingId=${bookingId}`;
+          } else {
+              alert('Payment failed');
+              btn.innerText = 'Pay Now';
+              btn.disabled = false;
+          }
+      } catch (err) {
+          alert('Connection error');
+          btn.innerText = 'Pay Now';
+          btn.disabled = false;
+      }
+  };
+
+  init();
+</script>
+</body>
+</html>
