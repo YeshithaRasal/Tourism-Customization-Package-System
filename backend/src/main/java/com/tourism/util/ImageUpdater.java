@@ -1,4 +1,4 @@
-package com.tourism;
+package com.tourism.util;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
