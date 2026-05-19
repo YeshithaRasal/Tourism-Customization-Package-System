@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Activities | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f59e0b; /* Amber/Orange */
+            --primary-light: #fffbeb;
+            --accent: #fbbf24;
+        }
+        .adventure-hero { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&q=80'); background-size: cover; padding: 7rem 0; color: white; text-align: center; clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
+        .activity-card { border-radius: 1.25rem; border: none; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: all 0.3s ease; position: relative; padding: 1.5rem; }
+        .activity-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 1.5rem; width: 100%; max-width: 500px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body style="background: #fffcf2;">
+    <nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+            <a href="index.html" class="logo">LankaTravels</a>
+            <ul class="nav-links" id="auth-link" style="list-style: none;">
+                <!-- Dynamic Role-Based Links -->
+            </ul>
+        </div>
+    </nav>
+
+    <header class="adventure-hero">
+        <div class="container">
+            <h1 style="font-size: 4rem; font-family: 'Playfair Display'; margin-bottom: 1.5rem;">Pulse-Pounding Adventures</h1>
+            <p style="font-size: 1.25rem; max-width: 700px; margin: 0 auto; opacity: 0.9;">From surfing in Arugam Bay to hiking the Knuckles Range, find your thrill.</p>
+            <div id="admin-add-btn" class="hidden" style="margin-top: 2.5rem;">
+                <button class="btn btn-primary" style="padding: 1.2rem 2.5rem; border-radius: 100px; font-weight: 800; background: white; color: var(--primary); border: none;" onclick="openModal()">+ Add New Activity</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="padding: 5rem 0;">
+        <div id="activities-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 3rem;">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <!-- Admin Modal -->
+    <div id="activity-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 1.5rem;">Manage Activity</h2>
+            <form id="activity-form">
+                <input type="hidden" id="activity-id">
+                <div class="form-group">
+                    <label class="form-label">Activity Name</label>
+                    <input type="text" id="activity-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Destination</label>
+                    <select id="activity-destination" class="form-input" required></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price (LKR)</label>
+                    <input type="number" id="activity-price" class="form-input" required>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Activity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let allActivities = [];
+        let allDestinations = [];
+
+        async function loadData() {
+            try {
+                const [aRes, dRes] = await Promise.all([apiFetch('/activities'), apiFetch('/destinations')]);
+                allActivities = await aRes.json();
+                allDestinations = await dRes.json();
+                renderActivities();
+                populateDestinations();
+                if (isAdmin()) {
+                    document.getElementById('admin-add-btn').classList.remove('hidden');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function populateDestinations() {
+            const select = document.getElementById('activity-destination');
+            select.innerHTML = '<option value="">Select Destination</option>' + 
+                allDestinations.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+
+        function renderActivities() {
+            const grid = document.getElementById('activities-grid');
+            grid.innerHTML = allActivities.map(a => `
+                <div class="activity-card">
+                    <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${a.name}</h3>
+                    <p style="margin-bottom: 0.5rem;">📍 ${a.destination ? a.destination.name : 'Unknown'}</p>
+                    <p style="font-weight: 700; color: var(--primary); font-size: 1.125rem; margin-bottom: 1.5rem;">LKR ${a.price.toLocaleString()}</p>
+                    
+                    ${isAdmin() ? `
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" style="flex: 1; padding: 0.5rem;" onclick="editActivity(${a.id})">Edit</button>
+                        <button class="btn btn-outline" style="flex: 1; padding: 0.5rem; color: #dc2626;" onclick="deleteActivity(${a.id})">Delete</button>
+                    </div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openModal(activity = null) {
+            const modal = document.getElementById('activity-modal');
+            const form = document.getElementById('activity-form');
+            form.reset();
+            document.getElementById('activity-id').value = '';
+            if (activity) {
+                document.getElementById('modal-title').innerText = 'Edit Activity';
+                document.getElementById('activity-id').value = activity.id;
+                document.getElementById('activity-name').value = activity.name;
+                document.getElementById('activity-destination').value = activity.destination ? activity.destination.id : '';
+                document.getElementById('activity-price').value = activity.price;
+            } else {
+                document.getElementById('modal-title').innerText = 'Add Activity';
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('activity-modal').classList.remove('active'); }
+        function editActivity(id) { openModal(allActivities.find(a => a.id == id)); }
+
+        async function deleteActivity(id) {
+            if (!confirm('Are you sure?')) return;
+            try {
+                await apiFetch(`/activities/${id}`, { method: 'DELETE' });
+                loadData();
+            } catch (err) { alert('Failed to delete'); }
+        }
+
+        document.getElementById('activity-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('activity-id').value;
+            const payload = {
+                name: document.getElementById('activity-name').value,
+                destination: { id: parseInt(document.getElementById('activity-destination').value) },
+                price: parseFloat(document.getElementById('activity-price').value)
+            };
+            try {
+                await apiFetch(id ? `/activities/${id}` : '/activities', {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+                closeModal(); loadData();
+            } catch (err) { alert('Error saving'); }
+        };
+
+        loadData();
+    </script>
+</body>
+</html>
