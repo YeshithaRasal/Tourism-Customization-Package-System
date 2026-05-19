@@ -1,6 +1,5 @@
 package com.tourism.controller;
 
-
 import com.tourism.model.Activity;
 import com.tourism.repository.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
