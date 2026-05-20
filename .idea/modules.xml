@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/tourism-package.iml" filepath="$PROJECT_DIR$/.idea/tourism-package.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Tourism-Customization-Package-System.iml" filepath="$PROJECT_DIR$/.idea/Tourism-Customization-Package-System.iml" />
     </modules>
   </component>
 </project>

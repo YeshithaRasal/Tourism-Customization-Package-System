@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing & Payment Details | LankaTravels</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+        --primary: #0f172a;
+        --accent: #3b82f6;
+        --success: #10b981;
+        --danger: #ef4444;
+        --background: #f1f5f9;
+        --card-bg: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
+
+    body {
+        background-color: var(--background);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-main);
+    }
+
+    .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .header-section {
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-section h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        color: var(--primary);
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .section-card {
+        background: var(--card-bg);
+        border-radius: 1.25rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        background: #f8fafc;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .data-table td {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .price-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f8fafc;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        width: fit-content;
+    }
+
+    .price-input-wrapper span {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .price-input {
+        border: none;
+        background: transparent;
+        font-weight: 700;
+        color: var(--text-main);
+        width: 100px;
+        font-family: inherit;
+    }
+
+    .price-input:focus { outline: none; }
+
+    .btn-delete {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: 1px solid #fee2e2;
+        background: #fff5f5;
+        color: var(--danger);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-delete:hover {
+        background: var(--danger);
+        color: white;
+        border-color: var(--danger);
+    }
+
+    .badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    .badge-hotel { background: #e0f2fe; color: #0369a1; }
+    .badge-activity { background: #fef3c7; color: #92400e; }
+  </style>
+</head>
+<body>
+<nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+  <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+    <a href="index.html" class="logo">LankaTravels</a>
+    <ul class="nav-links" id="auth-link" style="list-style: none; display: flex; gap: 2rem;">
+      <!-- Dynamic Links -->
+    </ul>
+  </div>
+</nav>
+
+<div class="admin-container">
+  <div class="header-section">
+    <div>
+      <h1>Payment & Pricing Details</h1>
+      <p style="color: var(--text-muted);">Manage inventory pricing and system-wide costs.</p>
+    </div>
+    <div style="text-align: right;">
+      <a href="management.html" class="btn btn-outline" style="font-size: 0.875rem;">
+        <i class="fas fa-arrow-left"></i> Back to Hub
+      </a>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Hotel Pricing Section -->
+    <div class="section-card">
+      <div class="card-header">
+        <h2><i class="fas fa-hotel" style="color: var(--accent);"></i> Hotel Nightly Rates</h2>
+        <span class="badge badge-hotel" id="hotel-count">0 Hotels</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Hotel Name</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>Price Per Night</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+          </thead>
+          <tbody id="hotel-pricing-body">
+          <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Activity Pricing Section -->
+    <div class="section-card">
+      <div class="card-header">
+        <h2><i class="fas fa-skating" style="color: #f59e0b;"></i> Activity Costs</h2>
+        <span class="badge badge-activity" id="activity-count">0 Activities</span>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+          <tr>
+            <th>Activity Name</th>
+            <th>Location</th>
+            <th>Unit Price</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+          </thead>
+          <tbody id="activity-pricing-body">
+          <!-- Loaded via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let hotels = [];
+  let activities = [];
+
+  async function init() {
+      if (!isAdmin()) {
+          window.location.href = 'home.html';
+          return;
+      }
+      await loadPricingData();
+  }
+
+  async function loadPricingData() {
+      try {
+          const [hRes, aRes] = await Promise.all([
+              apiFetch('/hotels'),
+              apiFetch('/activities')
+          ]);
+
+          hotels = await hRes.json();
+          activities = await aRes.json();
+
+          renderHotels();
+          renderActivities();
+      } catch (err) {
+          console.error('Failed to load data', err);
+      }
+  }
+
+  function renderHotels() {
+      document.getElementById('hotel-count').innerText = `${hotels.length} Hotels`;
+      const tbody = document.getElementById('hotel-pricing-body');
+      tbody.innerHTML = hotels.map(h => `
+          <tr>
+              <td>
+                  <div style="font-weight: 700;">${h.name}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">ID: #${h.id}</div>
+              </td>
+              <td>${h.destination.name}</td>
+              <td><span style="text-transform: capitalize;">${h.hotelType}</span></td>
+              <td>
+                  <div class="price-input-wrapper">
+                      <span>LKR</span>
+                      <input type="number" class="price-input" value="${h.pricePerNight}"
+                             onchange="updateHotelPrice(${h.id}, this.value)">
+                  </div>
+              </td>
+              <td style="text-align: right;">
+                  <button class="btn-delete" onclick="deleteHotel(${h.id})" title="Delete Hotel">
+                      <i class="fas fa-trash-alt"></i>
+                  </button>
+              </td>
+          </tr>
+      `).join('');
+  }
+
+  function renderActivities() {
+      document.getElementById('activity-count').innerText = `${activities.length} Activities`;
+      const tbody = document.getElementById('activity-pricing-body');
+      tbody.innerHTML = activities.map(a => `
+          <tr>
+              <td>
+                  <div style="font-weight: 700;">${a.name}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">ID: #${a.id}</div>
+              </td>
+              <td>${a.destination.name}</td>
+              <td>
+                  <div class="price-input-wrapper">
+                      <span>LKR</span>
+                      <input type="number" class="price-input" value="${a.price}"
+                             onchange="updateActivityPrice(${a.id}, this.value)">
+                  </div>
+              </td>
+              <td style="text-align: right;">
+                  <button class="btn-delete" onclick="deleteActivity(${a.id})" title="Delete Activity">
+                      <i class="fas fa-trash-alt"></i>
+                  </button>
+              </td>
+          </tr>
+      `).join('');
+  }
+
+  async function updateHotelPrice(id, newPrice) {
+      try {
+          const hotel = hotels.find(h => h.id === id);
+          const updated = { ...hotel, pricePerNight: parseFloat(newPrice) };
+          await apiFetch(`/hotels/${id}`, {
+              method: 'PUT',
+              body: JSON.stringify(updated)
+          });
+          alert(`Price updated for ${hotel.name}`);
+      } catch (err) {
+          alert('Update failed');
+      }
+  }
+
+  async function updateActivityPrice(id, newPrice) {
+      try {
+          const activity = activities.find(a => a.id === id);
+          const updated = { ...activity, price: parseFloat(newPrice) };
+          await apiFetch(`/activities/${id}`, {
+              method: 'PUT',
+              body: JSON.stringify(updated)
+          });
+          alert(`Price updated for ${activity.name}`);
+      } catch (err) {
+          alert('Update failed');
+      }
+  }
+
+  async function deleteHotel(id) {
+      if (!confirm('Are you sure? Deleting this hotel will affect all future bookings.')) return;
+      try {
+          await apiFetch(`/hotels/${id}`, { method: 'DELETE' });
+          hotels = hotels.filter(h => h.id !== id);
+          renderHotels();
+      } catch (err) {
+          alert('Delete failed. Ensure no bookings are active for this hotel.');
+      }
+  }
+
+  async function deleteActivity(id) {
+      if (!confirm('Are you sure? Deleting this activity will affect all future bookings.')) return;
+      try {
+          await apiFetch(`/activities/${id}`, { method: 'DELETE' });
+          activities = activities.filter(a => a.id !== id);
+          renderActivities();
+      } catch (err) {
+          alert('Delete failed. Ensure no bookings are active for this activity.');
+      }
+  }
+
+  init();
+</script>
+</body>
+</html>
