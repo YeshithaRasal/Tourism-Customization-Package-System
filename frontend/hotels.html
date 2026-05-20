@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Hotels | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af; /* Deep Blue */
+            --primary-light: #eff6ff;
+            --accent: #3b82f6;
+        }
+        .luxury-header { background: #0f172a; color: white; padding: 5rem 0; text-align: center; border-radius: 0 0 3rem 3rem; margin-bottom: 3rem; }
+        .hotel-card { border-radius: 1rem; border: 1px solid #e2e8f0; background: white; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; height: 100%; display: flex; flex-direction: column; }
+        .hotel-card:hover { transform: translateY(-10px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2.5rem; border-radius: 2rem; width: 100%; max-width: 600px; }
+        .image-preview { width: 100%; height: 150px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin-top: 0.5rem; overflow: hidden; }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body style="background: #f1f5f9;">
+    <nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+            <a href="home.html" class="logo">LankaTravels</a>
+            <ul class="nav-links" id="auth-link" style="list-style: none;">
+                <!-- Dynamic Role-Based Links -->
+            </ul>
+        </div>
+    </nav>
+
+    <header class="luxury-header">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-family: 'Playfair Display'; margin-bottom: 1rem;">World-Class Accommodation</h1>
+            <p style="font-size: 1.125rem; opacity: 0.8; max-width: 600px; margin: 0 auto;">Experience unparalleled comfort in the heart of Sri Lanka</p>
+            <div id="admin-add-btn" class="hidden" style="margin-top: 2rem;">
+                <button class="btn btn-primary" style="background: white; color: var(--primary); border: none;" onclick="openModal()">+ Register New Hotel</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="hotels-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2.5rem; padding-bottom: 4rem;">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <!-- Admin Modal -->
+    <div id="hotel-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="margin-bottom: 1.5rem; font-family: 'Playfair Display'; font-weight: 800;">Manage Hotel</h2>
+            <form id="hotel-form">
+                <input type="hidden" id="hotel-id">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Hotel Name</label>
+                            <input type="text" id="hotel-name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Destination</label>
+                            <select id="hotel-destination" class="form-input" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price per Night (LKR)</label>
+                            <input type="number" id="hotel-price" class="form-input" required>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Hotel Type</label>
+                            <select id="hotel-type" class="form-input" required>
+                                <option value="budget">Budget</option>
+                                <option value="standard">Standard</option>
+                                <option value="luxury">Luxury</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" id="hotel-image" class="form-input" required oninput="updatePreview(this.value)">
+                            <div class="image-preview" id="preview-container">
+                                <span style="color: #94a3b8; font-size: 0.75rem;">Preview</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Save Hotel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let allHotels = [];
+        let allDestinations = [];
+
+        async function loadData() {
+            try {
+                const [hRes, dRes] = await Promise.all([apiFetch('/hotels'), apiFetch('/destinations')]);
+                allHotels = await hRes.json();
+                allDestinations = await dRes.json();
+                renderHotels();
+                populateDestinations();
+                if (isAdmin()) {
+                    document.getElementById('admin-add-btn').classList.remove('hidden');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function populateDestinations() {
+            const select = document.getElementById('hotel-destination');
+            select.innerHTML = '<option value="">Select Destination</option>' + 
+                allDestinations.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+        }
+
+        function renderHotels() {
+            const grid = document.getElementById('hotels-grid');
+            grid.innerHTML = allHotels.map(h => `
+                <div class="hotel-card">
+                    <div style="position: relative; height: 200px; background: #f1f5f9;">
+                        <img src="${h.imageUrl || ''}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span class="badge" style="position: absolute; bottom: 1rem; left: 1rem; background: rgba(255,255,255,0.9);">${h.hotelType}</span>
+                    </div>
+                    <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column;">
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 800;">${h.name}</h3>
+                        <p style="margin-bottom: 0.5rem; color: var(--muted); font-size: 0.875rem;">📍 ${h.destination ? h.destination.name : 'Unknown'}</p>
+                        <p style="font-weight: 800; color: var(--primary); font-size: 1.125rem; margin-top: auto;">LKR ${h.pricePerNight.toLocaleString()} / night</p>
+                        
+                        ${isAdmin() ? `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                            <button class="btn btn-outline" style="flex: 1; padding: 0.5rem;" onclick="editHotel(${h.id})">Edit</button>
+                            <button class="btn btn-outline" style="flex: 1; padding: 0.5rem; color: #dc2626;" onclick="deleteHotel(${h.id})">Delete</button>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updatePreview(url) {
+            const container = document.getElementById('preview-container');
+            container.innerHTML = url ? `<img src="${url}">` : '<span style="color: #94a3b8; font-size: 0.75rem;">Preview</span>';
+        }
+
+        function openModal(hotel = null) {
+            const modal = document.getElementById('hotel-modal');
+            const form = document.getElementById('hotel-form');
+            form.reset();
+            document.getElementById('hotel-id').value = '';
+            if (hotel) {
+                document.getElementById('modal-title').innerText = 'Edit Hotel';
+                document.getElementById('hotel-id').value = hotel.id;
+                document.getElementById('hotel-name').value = hotel.name;
+                document.getElementById('hotel-image').value = hotel.imageUrl || '';
+                document.getElementById('hotel-destination').value = hotel.destination ? hotel.destination.id : '';
+                document.getElementById('hotel-price').value = hotel.pricePerNight;
+                document.getElementById('hotel-type').value = hotel.hotelType;
+                updatePreview(hotel.imageUrl);
+            } else {
+                document.getElementById('modal-title').innerText = 'Register Hotel';
+                updatePreview('');
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('hotel-modal').classList.remove('active'); }
+        function editHotel(id) { openModal(allHotels.find(h => h.id == id)); }
+
+        async function deleteHotel(id) {
+            if (!confirm('Are you sure?')) return;
+            try {
+                await apiFetch(`/hotels/${id}`, { method: 'DELETE' });
+                loadData();
+            } catch (err) { alert('Failed to delete'); }
+        }
+
+        document.getElementById('hotel-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('hotel-id').value;
+            const payload = {
+                name: document.getElementById('hotel-name').value,
+                imageUrl: document.getElementById('hotel-image').value,
+                destination: { id: parseInt(document.getElementById('hotel-destination').value) },
+                pricePerNight: parseFloat(document.getElementById('hotel-price').value),
+                hotelType: document.getElementById('hotel-type').value
+            };
+            try {
+                await apiFetch(id ? `/hotels/${id}` : '/hotels', {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(payload)
+                });
+                closeModal(); loadData();
+            } catch (err) { alert('Error saving'); }
+        };
+
+        loadData();
+    </script>
+</body>
+</html>
