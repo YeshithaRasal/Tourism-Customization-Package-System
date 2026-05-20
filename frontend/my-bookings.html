@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body style="background: #f8fafc;">
+<nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+        <a href="index.html" class="logo">LankaTravels</a>
+        <ul class="nav-links" id="auth-link" style="list-style: none;">
+            <!-- Dynamic Role-Based Links -->
+        </ul>
+    </div>
+</nav>
+
+<main class="container" style="margin-top: 4rem; max-width: 1000px;">
+    <div style="margin-bottom: 4rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Booking History</h1>
+        <p style="color: #64748b; font-size: 1.125rem;">Manage your upcoming trips and travel records.</p>
+    </div>
+
+    <div id="bookings-list">
+        <!-- Dynamic Content -->
+    </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    async function loadMyBookings() {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // If admin, this logic might need to fetch ALL bookings if we want,
+            // but the user asked for "his profile" and "his booking page".
+            const res = await apiFetch(`/bookings/user/${user.id}`);
+            const bookings = await res.json();
+            const list = document.getElementById('bookings-list');
+
+            if (!bookings || bookings.length === 0) {
+                list.innerHTML = `
+                    <div class="card animate-fade-in" style="padding: 3rem; text-align: center;">
+                        <p style="color: var(--muted); margin-bottom: 1.5rem;">You haven't booked any packages yet.</p>
+                        <a href="package-builder.html" class="btn btn-primary">Start Planning</a>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = bookings.map(b => `
+                <div class="card animate-fade-in" style="padding: 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border: 1px solid #e2e8f0;">
+                    <div>
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-weight: 800; font-size: 1.125rem;">#TRV-${b.id.toString().padStart(5, '0')}</span>
+                            <span class="badge" style="background: ${getStatusColor(b.status)}; color: white; padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">
+                                ${b.status}
+                            </span>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--muted);">
+                            ${b.details ? b.details.length : 0} Destination(s) • Booked on ${new Date(b.createdAt).toLocaleDateString()}
+                        </p>
+                    </div>
+                    <div style="text-align: right; display: flex; align-items: center; gap: 1.5rem;">
+                        <div>
+                            <p style="font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-bottom: 0.5rem;">LKR ${b.totalCost ? b.totalCost.toLocaleString() : 0}</p>
+                            <a href="booking.html?id=${b.id}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">View Details</a>
+                        </div>
+                        <button class="btn btn-outline" style="color: #dc2626; border-color: #fecaca;" onclick="deleteBooking(${b.id})">Cancel</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            console.error(err);
+            document.getElementById('bookings-list').innerHTML = '<p>Error loading bookings. Please try again later.</p>';
+        }
+    }
+
+    async function deleteBooking(id) {
+        if (!confirm('Are you sure you want to cancel this booking?')) return;
+        try {
+            const res = await apiFetch(`/bookings/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadMyBookings();
+            } else {
+                alert('Failed to cancel booking');
+            }
+        } catch (err) {
+            alert('Connection error');
+        }
+    }
+
+    function getStatusColor(status) {
+        switch(status) {
+            case 'confirmed': return '#10b981';
+            case 'pending': return '#f59e0b';
+            case 'cancelled': return '#ef4444';
+            default: return '#64748b';
+        }
+    }
+
+    loadMyBookings();
+</script>
+</body>
+</html>
