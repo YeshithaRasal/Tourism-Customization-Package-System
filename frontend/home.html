@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | LankaTravels Experience</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0d9488;
+            --secondary: #0f172a;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body { font-family: var(--font-body); color: var(--secondary); margin: 0; background-color: #f8fafc; }
+
+        /* Navigation */
+        .nav-transparent { background: rgba(15, 23, 42, 0.1); backdrop-filter: blur(10px); position: fixed; width: 100%; top: 0; z-index: 1000; transition: all 0.4s ease; border-bottom: 1px solid rgba(255,255,255,0.1); height: 5rem; display: flex; align-items: center; }
+        .nav-transparent.scrolled { background: white; border-bottom: 1px solid #e2e8f0; height: 4.25rem; }
+        .nav-transparent .logo { color: white !important; }
+        .nav-transparent.scrolled .logo { color: var(--primary) !important; }
+        .nav-transparent .nav-links a { color: rgba(255,255,255,0.9) !important; }
+        .nav-transparent.scrolled .nav-links a { color: #64748b !important; }
+
+        /* Hero */
+        .hero-v2 { height: 100vh; position: relative; display: flex; align-items: center; justify-content: center; color: white; background: #000; overflow: hidden; }
+        .hero-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; filter: brightness(0.75); }
+        .hero-v2::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.8) 0%, transparent 60%); pointer-events: none; }
+        .hero-content { position: relative; z-index: 10; text-align: center; color: white; max-width: 900px; padding: 0 2rem; }
+        .hero-content h1 { color: white !important; font-family: var(--font-display); font-size: clamp(3rem, 10vw, 6rem); font-weight: 900; letter-spacing: -0.03em; margin-bottom: 2rem; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .hero-content p { color: rgba(255,255,255,0.9) !important; font-size: 1.25rem; margin-bottom: 3.5rem; }
+
+        /* Parallax Global Background */
+        .global-bg-wrapper {
+            background-image: linear-gradient(rgba(255,255,255,0.96), rgba(255,255,255,0.96)), url('https://www.danlanka.com/wp-content/uploads/2018/07/blog_cover-2.jpg');
+            background-attachment: fixed; background-size: cover; background-position: center;
+        }
+
+        /* Footer with Background Image */
+        .footer-with-bg {
+            position: relative;
+            padding: 8rem 0 4rem;
+            background: var(--secondary);
+            color: white;
+            overflow: hidden;
+        }
+        .footer-bg-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.15;
+            filter: grayscale(1) brightness(0.5);
+            pointer-events: none;
+        }
+        .footer-content { position: relative; z-index: 1; }
+
+        .category-card { border-radius: 2.5rem; overflow: hidden; height: 500px; cursor: pointer; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
+        .category-card:hover { transform: translateY(-15px); }
+        .btn-fancy { background: white; color: var(--secondary); padding: 1.5rem 3.5rem; border-radius: 100px; font-weight: 800; text-decoration: none; display: inline-block; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: none; }
+    </style>
+</head>
+<body>
+<nav class="nav-transparent" id="main-nav">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <a href="home.html" class="logo" style="display: flex; align-items: center; gap: 1rem;">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/mountain.png" style="width: 30px; height: 30px;" id="nav-logo-img">
+            <span style="font-weight: 900; letter-spacing: -0.05em; font-size: 1.5rem;">LankaTravels</span>
+        </a>
+        <ul class="nav-links" id="auth-link" style="list-style: none;">
+            <!-- Dynamic Links -->
+        </ul>
+    </div>
+</nav>
+
+<header class="hero-v2">
+    <img src="https://www.danlanka.com/wp-content/uploads/2018/07/blog_cover-2.jpg" class="hero-image" alt="Vivid Hero">
+    <div class="hero-content">
+        <h1>Experience <br> Perfection</h1>
+        <p>Unveil the secrets of the Indian Ocean. A curated journey of luxury, culture, and adventure awaits.</p>
+        <a href="package-builder.html" class="btn-fancy">Explore the Island</a>
+    </div>
+</header>
+
+<div class="global-bg-wrapper">
+    <main class="container" style="padding: 10rem 0 5rem;">
+        <div style="text-align: center; margin-bottom: 6rem;">
+            <span style="color: var(--primary); font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; font-size: 0.75rem;">Collections</span>
+            <h2 style="font-family: var(--font-display); font-size: 3.5rem; font-weight: 900; margin-top: 1rem;">Endless Discovery</h2>
+        </div>
+        <!-- Category cards here... -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+            <div class="category-card" onclick="location.href='destinations.html'"><img src="https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=1000&q=80" style="width: 100%; height: 100%; object-fit: cover;"></div>
+            <div class="category-card" onclick="location.href='hotels.html'"><img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80" style="width: 100%; height: 100%; object-fit: cover;"></div>
+            <div class="category-card" onclick="location.href='activities.html'"><img src="https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=1000&q=80" style="width: 100%; height: 100%; object-fit: cover;"></div>
+        </div>
+    </main>
+</div>
+
+<footer class="footer-with-bg">
+    <!-- New Footer Background Image -->
+    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&q=100&w=1920" class="footer-bg-img" alt="Footer Landscape">
+    <div class="container footer-content">
+        <div style="text-align: center;">
+            <div class="logo" style="color: white; margin-bottom: 2rem; justify-content: center; font-size: 2rem;">LankaTravels</div>
+            <p style="opacity: 0.5; font-size: 0.875rem; color: white !important;">© 2026 LankaTravels Experience. Curated for the perfectionist traveler.</p>
+            <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 2rem;">
+                <a href="destinations.html" style="color: white; font-weight: 700;">Explore</a>
+                <a href="hotels.html" style="color: white; font-weight: 700;">Hotels</a>
+                <a href="package-builder.html" style="color: white; font-weight: 700;">Booking</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="js/auth.js"></script>
+<script>
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('main-nav');
+        const logoImg = document.getElementById('nav-logo-img');
+        if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
+            logoImg.src = "https://img.icons8.com/ios-filled/50/0d9488/mountain.png";
+        } else {
+            nav.classList.remove('scrolled');
+            logoImg.src = "https://img.icons8.com/ios-filled/50/ffffff/mountain.png";
+        }
+    });
+</script>
+</body>
+</html>

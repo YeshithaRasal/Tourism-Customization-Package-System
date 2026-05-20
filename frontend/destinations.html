@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Destinations | LankaTravels</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #059669; /* Emerald Green */
+            --primary-light: #ecfdf5;
+            --accent: #10b981;
+        }
+        .hero-section { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&q=80'); background-size: cover; padding: 6rem 0; color: white; text-align: center; border-radius: 0 0 2rem 2rem; }
+        .dest-card { border-radius: 1.5rem; overflow: hidden; transition: all 0.3s ease; border: 1px solid #e2e8f0; background: white; height: 100%; position: relative; }
+        .dest-card:hover { transform: translateY(-10px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .image-preview { width: 100%; height: 150px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 1rem; display: flex; align-items: center; justify-content: center; margin-top: 0.5rem; overflow: hidden; }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 1.5rem; width: 100%; max-width: 500px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body style="background: #f8fafc;">
+<nav style="background: white; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+        <a href="index.html" class="logo">LankaTravels</a>
+        <ul class="nav-links" id="auth-link" style="list-style: none;">
+            <!-- Dynamic Role-Based Links -->
+        </ul>
+    </div>
+</nav>
+
+<header class="hero-section">
+    <div class="container">
+        <h1 style="font-size: 3.5rem; font-family: 'Playfair Display'; margin-bottom: 1rem;">Explore Destinations</h1>
+        <p style="font-size: 1.25rem; opacity: 0.9;">Discover the beauty of the pearl of the Indian Ocean</p>
+        <div id="admin-add-btn" class="hidden" style="margin-top: 2rem;">
+            <button class="btn btn-primary" style="padding: 1rem 2rem; background: white; color: var(--primary); border: none;" onclick="openModal()">+ Add New Destination</button>
+        </div>
+    </div>
+</header>
+
+<main class="container" style="padding: 4rem 0;">
+    <div id="destinations-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2.5rem;">
+        <!-- Dynamic Content -->
+    </div>
+</main>
+
+<!-- Admin Modal -->
+<div id="dest-modal" class="modal">
+    <div class="modal-content">
+        <h2 id="modal-title" style="margin-bottom: 1.5rem;">Manage Destination</h2>
+        <form id="dest-form">
+            <input type="hidden" id="dest-id">
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" id="dest-name" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="dest-desc" class="form-input" required style="height: 100px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Image URL</label>
+                <input type="url" id="dest-image" class="form-input" required oninput="updatePreview(this.value)">
+                <div class="image-preview" id="preview-container">
+                    <span style="color: #94a3b8; font-size: 0.75rem;">Preview</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Destination</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    let allDestinations = [];
+
+    async function loadDestinations() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/destinations`);
+            allDestinations = await res.json();
+            renderDestinations();
+            if (isAdmin()) {
+                document.getElementById('admin-add-btn').classList.remove('hidden');
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function renderDestinations() {
+        const grid = document.getElementById('destinations-grid');
+        grid.innerHTML = allDestinations.map(dest => `
+                <div class="card dest-card">
+                    <div style="height: 250px; background: #f1f5f9; overflow: hidden;">
+                        <img src="${dest.imageUrl}" alt="${dest.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 0.75rem;">${dest.name}</h3>
+                        <p style="color: var(--muted); font-size: 0.9375rem; margin-bottom: 1.5rem; line-height: 1.6;">${dest.description}</p>
+
+                        ${isAdmin() ? `
+                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                            <button class="btn btn-outline" style="flex: 1; padding: 0.5rem;" onclick="editDest(${dest.id})">Edit</button>
+                            <button class="btn btn-outline" style="flex: 1; padding: 0.5rem; color: #dc2626;" onclick="deleteDest(${dest.id})">Delete</button>
+                        </div>` : ''}
+
+                        <a href="package-builder.html?dest=${dest.id}" class="btn btn-primary" style="width: 100%;">Build Package</a>
+                    </div>
+                </div>
+            `).join('');
+    }
+
+    function updatePreview(url) {
+        const container = document.getElementById('preview-container');
+        container.innerHTML = url ? `<img src="${url}">` : '<span style="color: #94a3b8; font-size: 0.75rem;">Preview</span>';
+    }
+
+    function openModal(dest = null) {
+        const modal = document.getElementById('dest-modal');
+        const form = document.getElementById('dest-form');
+        form.reset();
+        document.getElementById('dest-id').value = '';
+        if (dest) {
+            document.getElementById('modal-title').innerText = 'Edit Destination';
+            document.getElementById('dest-id').value = dest.id;
+            document.getElementById('dest-name').value = dest.name;
+            document.getElementById('dest-desc').value = dest.description;
+            document.getElementById('dest-image').value = dest.imageUrl;
+            updatePreview(dest.imageUrl);
+        } else {
+            document.getElementById('modal-title').innerText = 'Add Destination';
+            updatePreview('');
+        }
+        modal.classList.add('active');
+    }
+
+    function closeModal() { document.getElementById('dest-modal').classList.remove('active'); }
+    function editDest(id) { openModal(allDestinations.find(d => d.id === id)); }
+
+    async function deleteDest(id) {
+        if (!confirm('Are you sure? This will remove all associated hotels and activities.')) return;
+        try {
+            await apiFetch(`/destinations/${id}`, { method: 'DELETE' });
+            loadDestinations();
+        } catch (err) { alert('Failed to delete'); }
+    }
+
+    document.getElementById('dest-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('dest-id').value;
+        const payload = {
+            name: document.getElementById('dest-name').value,
+            description: document.getElementById('dest-desc').value,
+            imageUrl: document.getElementById('dest-image').value
+        };
+        try {
+            await apiFetch(id ? `/destinations/${id}` : '/destinations', {
+                method: id ? 'PUT' : 'POST',
+                body: JSON.stringify(payload)
+            });
+            closeModal(); loadDestinations();
+        } catch (err) { alert('Error saving'); }
+    };
+
+    loadDestinations();
+</script>
+</body>
+</html>
